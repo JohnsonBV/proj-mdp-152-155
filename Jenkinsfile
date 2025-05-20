@@ -1,12 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'calculator-app'
-        IMAGE_TAG = 'latest'
-        CONTAINER_PORT = '8080'
-    }
-
     stages {
         stage('Clone') {
             steps {
@@ -17,7 +11,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    app = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                    dockerImage = docker.build('calculator-app:latest')
                 }
             }
         }
@@ -25,11 +19,11 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    // Clean up old containers
-                    sh "docker rm -f ${IMAGE_NAME} || true"
+                    // Stop and remove the old container if it exists
+                    sh 'docker rm -f calculator-app || true'
 
-                    // Run the new container
-                    app.run("-d --name ${IMAGE_NAME} -p ${CONTAINER_PORT}:${CONTAINER_PORT}")
+                    // Run a new container on port 9090 to avoid conflict with Jenkins
+                    sh 'docker run -d --name calculator-app -p 9090:8080 calculator-app:latest'
                 }
             }
         }
