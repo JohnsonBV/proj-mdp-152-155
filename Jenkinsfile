@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = 'calculator-app'
+        IMAGE_TAG = 'latest'
+        CONTAINER_PORT = '8080'
+    }
+
     stages {
         stage('Clone') {
             steps {
@@ -11,7 +17,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build('calculator-app:latest')
+                    app = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
@@ -19,7 +25,11 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    docker.image('calculator-app:latest').run('-p 8080:8080')
+                    // Clean up old containers
+                    sh "docker rm -f ${IMAGE_NAME} || true"
+
+                    // Run the new container
+                    app.run("-d --name ${IMAGE_NAME} -p ${CONTAINER_PORT}:${CONTAINER_PORT}")
                 }
             }
         }
