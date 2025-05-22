@@ -1,0 +1,42 @@
+---
+- name: Install Kubernetes dependencies
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Install unzip and curl
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - unzip
+        - curl
+
+    - name: Install AWS CLI v2
+      shell: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip -o awscliv2.zip
+        sudo ./aws/install
+      args:
+        creates: /usr/local/bin/aws
+
+    - name: Get latest kubectl version (fallback to specific version if needed)
+      shell: curl -fsSL https://dl.k8s.io/release/stable.txt || echo "v1.28.2"
+      register: kubectl_version
+      changed_when: false
+
+    - name: Show kubectl_version
+      debug:
+        msg: "Using kubectl version: {{ kubectl_version.stdout }}"
+
+    - name: Download kubectl
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version.stdout }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Install kops
+      get_url:
+        url: https://github.com/kubernetes/kops/releases/download/v1.28.0/kops-linux-amd64
+        dest: /usr/local/bin/kops
+        mode: '0755'
+

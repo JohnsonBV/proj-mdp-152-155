@@ -1,0 +1,19 @@
+# create_cluster.yml
+---
+- name: Create Kubernetes Cluster with Kops
+  hosts: localhost
+  tasks:
+    - name: Generate cluster configuration
+      shell: |
+        kops create cluster \
+        --cloud=aws \
+        --zones=us-east-2a,us-east-2b \
+        --name=cluster.k8s.local \
+        --node-count=2 \
+        --node-size=t2.medium \
+        --master-size=t2.medium \
+        --state=${KOPS_STATE_STORE} \
+        --yes
+      environment:
+        KOPS_STATE_STORE: "{{ lookup('env', 'KOPS_STATE_STORE') }}"
+
